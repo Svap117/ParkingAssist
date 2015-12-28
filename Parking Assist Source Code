@@ -1,0 +1,83 @@
+//we delare all repeatedly used variables outside of our loop to avoid redundancy
+// in declaring lines of code
+double meters;
+double microSeconds;
+const int ledOne = 13, ledTwo = 12, ledThree = 11, trig = 2, echo = 3, buttonDetection = 4;
+double modifiedRange;
+double lowerBounds = 6;
+double higherBounds = 10;
+//declare different states of buttonPress
+int buttonCurrent;
+int buttonPrevious;
+
+void setup() {
+  Serial.begin(9600); //used for debugging
+  pinMode(ledOne, OUTPUT);
+  pinMode(ledTwo, OUTPUT);
+  pinMode(ledThree, OUTPUT);
+  //delares trigger and echo
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  //declares button detection input
+  pinMode(buttonDetection, INPUT);
+}
+void loop(){
+  //at the beginning of our loop we will run code that involves the 
+  // synchronization of our button
+  buttonCurrent = digitalRead(buttonDetection);
+
+  //code for button switch state
+  if ((buttonCurrent == HIGH) && (buttonPrevious == LOW)){
+higherBounds = meters + 75; //note: the only problem with using meters is that
+if((meters - 75) > 0){               //the variable hasn’t been recently updated in the loop
+lowerBounds = meters - 75; }//though this shouldn’t be a problem since it’s fairly recent
+else { lowerBounds = 0; }
+}  
+  //this turns the trigger on and off, getting the seconds of sound
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(trig, LOW);
+
+  microSeconds = pulseIn(echo, HIGH);
+  meters = microsecondstoMeters(microSeconds);
+
+//this code, if the object is within range, starts to control the lights being displayed
+  if ((meters <= higherBounds) && (meters >= lowerBounds)){
+    digitalWrite(ledOne,HIGH);
+    digitalWrite(ledTwo,LOW);
+    digitalWrite(ledThree, LOW);
+
+    //***by far my favorite line of my code, this line takes the distance retrieved and turns it into a value from 0-1. closer to 0 closer to the optimal range.
+    modifiedRange = abs(mapPrecise(meters, lowerBounds, higherBounds, -1, 1));
+    
+    if (modifiedRange <= .6){
+      digitalWrite(ledTwo, HIGH);
+      digitalWrite(ledThree, LOW);
+      if (modifiedRange <= .3){
+      digitalWrite(ledThree, HIGH);
+      }
+     }
+    }     
+  else
+  {
+    digitalWrite(ledOne,LOW);
+    digitalWrite(ledTwo,LOW);
+    digitalWrite(ledThree, LOW);
+  }
+  buttonPrevious = buttonCurrent;
+  delay(100);
+  Serial.println(microSeconds); //code used to debug
+  digitalWrite(ledOne,HIGH);
+  digitalWrite(ledTwo,HIGH);
+  digitalWrite(ledThree, HIGH);
+}
+double microsecondstoMeters(double microseconds){
+  return microseconds / 58;
+}
+//instead of mapping with integers, this method maps through doubles
+double mapPrecise(double x, double in_min, double in_max, double out_min, double out_max){
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
