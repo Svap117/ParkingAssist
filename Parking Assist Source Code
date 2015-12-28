@@ -1,3 +1,4 @@
+''''Arduino
 //we delare all repeatedly used variables outside of our loop to avoid redundancy
 // in declaring lines of code
 double meters;
@@ -80,4 +81,4 @@ double microsecondstoMeters(double microseconds){
 double mapPrecise(double x, double in_min, double in_max, double out_min, double out_max){
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
+''''
